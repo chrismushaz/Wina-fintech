@@ -1,0 +1,348 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}
+  Dashboard | Wina Fintech
+{% endblock %}
+
+{% block content %}
+  <style>
+    .fade-in {
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+    }
+    .fade-in.active {
+      opacity: 1;
+    }
+    .slide-in {
+      transform: translateY(20px);
+      opacity: 0;
+      transition: transform 0.5s ease-out, opacity 0.5s ease-out;
+    }
+    .slide-in.active {
+      transform: translateY(0);
+      opacity: 1;
+    }
+  </style>
+
+  {% if messages %}
+    <div class="bg-red-900 p-4 absolute top-10 w-[80%] ml-[10%] text-white text-center">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+
+  <section class="w-[90%] mx-auto mt-8 text-center grid grid-cols-10 gap-5">
+    <div class="overflow-hidden col-span-3 flex items-center justify-center">
+      <div>
+        <canvas class="p-1 ml-40 mr-40" id="chartPie"></canvas>
+      </div>
+    </div>
+    <div class="col-span-7 flex justify-center items-center">
+      <div class="w-[95%] mx-auto">
+        <h3 class="text-3xl font-bold mb-6">Remaining Amounts</h3>
+        <div class="grid grid-cols-3 gap-3 w-[100%]">
+          {% for institution in institutions %}
+            {% if forloop.counter <= 3 %}
+              <div class="p-3 border rounded-md bg-sky-700 text-white">
+                <h2 class="font-medium">{{ institution.name }}</h2>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div>
+                    <p>K{{ institution.remaining_value|floatformat:2|intcomma }}</p>
+                    <p class="text-sm">Remaining</p>
+                  </div>
+                  <div>
+                    <p>K{{ institution.service_revenue|floatformat:2|intcomma }}</p>
+                    <p class="text-sm">Generated</p>
+                  </div>
+                </div>
+              </div>
+            {% elif forloop.counter == 4 %}
+              </div>
+              <div class="grid grid-cols-2 gap-3 w-[100%] mt-3">
+                <div class="p-3 border rounded-md bg-sky-700 text-white col-start-1 col-end-2">
+                  <h2 class="font-medium">{{ institution.name }}</h2>
+                  <div class="grid grid-cols-2 gap-2 mt-3">
+                    <div>
+                      <p>K{{ institution.remaining_value|floatformat:2|intcomma }}</p>
+                      <p class="text-sm">Remaining</p>
+                    </div>
+                    <div>
+                      <p>K{{ institution.service_revenue|floatformat:2|intcomma }}</p>
+                      <p class="text-sm">Generated</p>
+                    </div>
+                  </div>
+                </div>
+            {% else %}
+              <div class="p-3 border rounded-md bg-sky-700 text-white col-start-2 col-end-3">
+                <h2 class="font-medium">{{ institution.name }}</h2>
+                <div class="grid grid-cols-2 gap-2 mt-3">
+                  <div>
+                    <p>K{{ institution.remaining_value|floatformat:2|intcomma }}</p>
+                    <p class="text-sm">Remaining</p>
+                  </div>
+                  <div>
+                    <p>K{{ institution.service_revenue|floatformat:2|intcomma }}</p>
+                    <p class="text-sm">Generated</p>
+                  </div>
+                </div>
+              </div>
+            {% endif %}
+          {% empty %}
+            <p>No remaining amounts to display.</p>
+          {% endfor %}
+        </div>        
+      </div>
+    </div>
+  </section>
+
+
+  {% if user.is_superuser %}
+  <!-- Booth DropDowns -->
+  <section class="w-[90%] mx-auto mt-8">
+    <div class="grid grid-cols-6 gap-6">
+      <div class="col-span-1 flex items-center justify-center h-[13rem]">
+        <select id="booth_select" class="w-full p-2 mb-6 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+          <option value="">Select a booth</option>
+          {% for booth in booths %}
+            <option value="{{ booth.id }}">{{ booth.name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div id="booth_info" class="col-span-5 bg-sky-600 rounded-lg fade-in" style="display: none;">
+        <div class="grid grid-cols-4 gap-4 p-4">
+          <div class="col-span-1 border rounded-md p-4 h-[13rem] bg-white flex items-center justify-center slide-in">
+            <div class="text-center">
+              <h3 class="text-xl font-semibold mb-2 text-gray-400">Location</h3>
+              <h2 id="booth_location" class="text-gray-600 text-3xl font-bold"></h2>
+            </div>
+          </div>
+          <div class="col-span-1 border rounded-md p-4 h-[13rem] bg-white slide-in flex items-center justify-center">
+            <div class="text-center">
+              <h3 class="text-xl font-semibold mb-3 text-gray-800">Services</h3>
+              <div id="services_container" class="flex flex-col space-y-4">
+                <select id="services_select" class="w-full p-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500">
+                  <option value="">Select a service</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="col-span-2 border rounded-md p-4 h-[13rem] bg-white slide-in flex items-center justify-center">
+            <div>
+              <div id="service_revenue" class="text-gray-600 text-xl"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div id="no_booth_selected" class="col-span-5 bg-sky-600 rounded-lg flex items-center justify-center h-[13rem] fade-in">
+        <p class="text-white">Please select a booth to view its details.</p>
+      </div>
+      <div class="col-span-6">
+        <div class="grid grid-cols-2 gap-5">
+          <div id="chart-container" class="col-span-1 mt-8" style="display: none;">
+            <canvas id="transactionsChart"></canvas>
+          </div>
+          <div class="mt-4 p-4 col-span-1 col-start-2 rounded-md">
+            <h3 class="text-xl font-semibold mb-3 text-gray-800">Transactions</h3>
+            <div id="transactions_container" class="overflow-x-auto">
+              <table class="min-w-full bg-white">
+                <thead>
+                  <tr>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Service</th>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Amount</th>
+                    <th class="px-6 py-3 border-b-2 border-gray-300 text-left text-xs leading-4 font-medium text-gray-500 uppercase tracking-wider">Amount After Tax</th>
+                  </tr>
+                </thead>
+                <tbody id="transactions_body">
+                  <!-- Transactions will be inserted here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  {% endif %}
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    $(document).ready(function () {
+      let transactionsChart
+    
+      function loadBoothData(boothId, serviceId) {
+        $.ajax({
+          url: '{% url "dashboard" %}',
+          data: {
+            booth_id: boothId,
+            service_id: serviceId
+          },
+          dataType: 'json',
+          success: function (data) {
+            console.log('Received data:', data) // Debug log
+            if (data.error) {
+              console.error('Server returned an error:', data.error)
+              alert('An error occurred while loading booth data. Please try again.')
+              return
+            }
+    
+            $('#booth_location').text(data.location)
+    
+            var servicesSelect = $('#services_select')
+            servicesSelect.empty().append('<option value="">All services</option>')
+    
+            if (data.services && data.services.length > 0) {
+              $.each(data.services, function (index, service) {
+                servicesSelect.append('<option value="' + service.id + '" data-revenue="' + service.revenue + '">' + service.name + '</option>')
+              })
+    
+              servicesSelect.show()
+              $('#service_revenue').text('').show()
+    
+              if (serviceId) {
+                servicesSelect.val(serviceId)
+                var selectedOption = servicesSelect.find('option:selected')
+                var revenue = selectedOption.data('revenue')
+                if (revenue !== undefined) {
+                  $('#service_revenue').text('Revenue per Kwacha: ' + revenue)
+                }
+              } else {
+                $('#service_revenue').text('')
+              }
+            } else {
+              servicesSelect.hide()
+              $('#service_revenue').text('No services available for this booth.').show()
+            }
+    
+            updateTransactionsTable(data.transactions)
+            updateTransactionsChart(data.institutions_transactions)
+    
+            $('#transactions_container').show()
+            $('#chart-container').show()
+            $('#no_booth_selected').removeClass('active').hide()
+            $('#booth_info').show().addClass('active')
+            $('.slide-in').addClass('active')
+          },
+          error: function (jqXHR, textStatus, errorThrown) {
+            console.error('AJAX error: ' + textStatus + ' : ' + errorThrown)
+            alert('An error occurred while loading booth data. Please try again.')
+          }
+        })
+      }
+    
+      function updateTransactionsTable(transactions) {
+        var transactionsBody = $('#transactions_body')
+        transactionsBody.empty()
+        if (transactions && transactions.length > 0) {
+          $.each(transactions, function (index, transaction) {
+            transactionsBody.append('<tr>' + '<td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">' + transaction.id + '</td>' + '<td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">' + transaction.service + '</td>' + '<td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">' + transaction.amount + '</td>' + '<td class="px-6 py-4 whitespace-no-wrap border-b border-gray-200">' + transaction.taxamount.toFixed(2) + '</td>' + '</tr>')
+          })
+        } else {
+          transactionsBody.append('<tr><td colspan="5" class="px-6 py-4 text-center">No transactions available for this selection.</td></tr>')
+        }
+      }
+    
+      function updateTransactionsChart(institutionsTransactions) {
+        const ctx = document.getElementById('transactionsChart').getContext('2d')
+    
+        if (transactionsChart) {
+          transactionsChart.destroy()
+        }
+    
+        const labels = institutionsTransactions.map((item) => item.institution)
+        const data = institutionsTransactions.map((item) => item.transaction_count)
+    
+        transactionsChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: labels,
+            datasets: [
+              {
+                label: 'Number of Transactions',
+                data: data,
+                backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                borderColor: 'rgba(54, 162, 235, 1)',
+                borderWidth: 1
+              }
+            ]
+          },
+          options: {
+            responsive: true,
+            scales: {
+              y: {
+                beginAtZero: true,
+                title: {
+                  display: true,
+                  text: 'Number of Transactions'
+                }
+              },
+              x: {
+                title: {
+                  display: true,
+                  text: 'Institutions'
+                }
+              }
+            },
+            plugins: {
+              title: {
+                display: true,
+                text: 'Transactions by Institution for Selected Booth'
+              }
+            }
+          }
+        })
+      }
+    
+      $('#booth_select').change(function () {
+        var boothId = $(this).val()
+        if (boothId) {
+          loadBoothData(boothId)
+        } else {
+          $('#booth_info').removeClass('active')
+          $('.slide-in').removeClass('active')
+          $('#booth_info').hide()
+          $('#chart-container').hide()
+          $('#no_booth_selected').show().addClass('active')
+        }
+      })
+    
+      $('#services_select').change(function () {
+        var boothId = $('#booth_select').val()
+        var serviceId = $(this).val()
+        loadBoothData(boothId, serviceId)
+      })
+    
+      $('#no_booth_selected').addClass('active')
+    })
+  </script>
+
+  <script>
+    let totalLimit = {{ total_limit }};
+    let totalRevenue = {{ total_service_revenue }}
+    if (isNaN(totalLimit) || totalLimit === undefined) {
+        console.error("Total limit is not a valid number:", totalLimit);
+        totalLimit = 0;
+    }
+
+    const dataPie = {
+      labels: ['Total Credit', 'Total Revenue'],
+      datasets: [
+        {
+          label: 'Wina Fintech',
+          data: [totalLimit, totalRevenue],
+          backgroundColor: ['rgba(0, 123, 187, 0.8)', 'rgba(0, 12, 239, 0.8)'],
+          hoverOffset: 4
+        }
+      ]
+    }
+    
+    const configPie = {
+      type: 'pie',
+      data: dataPie,
+      options: {}
+    }
+    
+    var chartBar = new Chart(document.getElementById('chartPie'), configPie)
+  </script>
+{% endblock %}

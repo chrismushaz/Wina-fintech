@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block title %}
+  Booths | Dashboard
+{% endblock %}
+{% block content %}
+  <section class="w-[90%] mx-auto mt-8">
+    <h3 class="text-3xl font-bold mb-6 text-center w-[100%]">Booths Dashboard</h3>
+    <div class="grid grid-cols-3 gap-6 mt-8">
+      {% for booth_name, total_amount in booth_transactions.items %}
+        <div class="bg-white p-4 rounded-md border">
+          <h3 class="text-lg font-semibold">{{ booth_name }}</h3>
+          <p class="text-xl">K{{ total_amount|floatformat:2|intcomma }}</p>
+        </div>
+      {% empty %}
+        <p>No booth transactions available.</p>
+      {% endfor %}
+    </div>
+  </section>
+{% endblock %}

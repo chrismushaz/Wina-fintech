@@ -1,0 +1,82 @@
+Wina Fintech Web App Development
+
+
+GROUP MEMBERS
+JEROME KAMBAFWILE - 202303463
+DJEINABA WADOU - 202100388
+CHRISTOPHER MUSHABATI - 202204196
+
+
+##Technologies
+# Backend
+- Python Django
+- SQLite
+
+# Frontend
+- HTML
+- CSS
+- Javascript
+- Ajax
+
+
+## Process
+We chose to use Python django due to its versatility and many out-of-the box packages, allowing for faster development and better security.
+All the data sent and requested was stored in a SQLite database. It is known for its reliability and good performance.
+
+A file 'base.html' was created to house the base structure of the HTML pages, including all the imported packages like tailwindcss and javascript bundles. Using the 
+base.html allowed us to simply extend it to other pages instead of creating the HTML mockup structure on each page. And then, by using blocks, we could isolate the 
+Specific parts of the html that we wanted to carry to other pages, for example, '<title>{% block title %}{% endblock %}</title>' in the base.html allows will be 
+displayed in the dashboard.html as 
+
+'{% extends 'base.html' %} <-- This line is simply importing the base.html file to the dashboard page.
+{% block title %}
+Dashboard | Wina Fintech <-- this is the title that will be displayed on each page.
+{% endblock %}'
+
+The top of each page displays a full-screen navbar to allow the user to easily navigate across pages; it has the home link to take the user to the dashboard, booths to 
+take the user to the booth dashboard page and a colourful transact button to take the user to the create_transaction view to allow them to create a transaction.
+
+
+Using Django's inbuilt model functionality, we created three models.
+    i) Institution
+    ii) Booth
+    iii) Transaction
+These models each housed the requirements for each of the models. For example, each institution has a name, monthly limit, revenue per kwacha, and a logo for easy 
+identification.   The Booth model took a name, location, and services as a ManytoMany foreign key from the institution. This ManytoMany foreign key allows the booth to be 
+associated with more than one service, as was required in Table 2. Lastly, the Transaction model took a booth as a foreign key from the Booth model, service from the 
+Institution model and amount as an integer field. These models were designed to connect as illustrated above.
+
+We thereafter created views. The dashboard view contained the most logic, as it was where most of the information was displayed. The logic included all the calculations 
+that had to be done, from calculating the service revenue to the total credit per month. The other views created were the booths_dashboard view and the 
+create_transaction view. Each of these views had custom logic to make them do a specific task. The calculated values were then passed as variables into a context 
+dictionary which were passed to the corresponding HTML page. At this point, we saw it fit to add a module called humanize. This module was tasked with making the 
+numbers more readable, especially as they were appearing as money values.
+
+To create new transactions, we created a new view and a new file named the forms.py. These two were responsible for creating transactions with the auto-assigned transaction ID (WB0000....).
+In the forms.py, we wrote logic to allow the user to select a booth from a dropdown and as the user selected the services from a dropdown, only the services offered by 
+that booth will be displayed in that dropdown. This feature was added to reduce chances of human error by selecting a service that does not exist at a particular booth. 
+Once a transaction has been created, the user is redirected to the create view in case the user should want to create another transaction. A message is also displayed on 
+the screen affriming to the user that the transaction has been created successfully and also showing the ID that that transaction has been created with. 
+
+In the html, the variables were displayed using the Django templating language ( {{ ... }} ). This allowed all the calculations to be done in the backend and passed as 
+fixed values in the frontend. Also, with the use of javascript and javascript libraries like jquery and chart.js, we were able to allow for greater functionality. The javascript was 
+used with when creating the booth and service dropdowns as well as the pie chart and bar graphs. Another javascript technology that we used was Ajax. Ajax allowed for us 
+to request different data from the server without refreshing the page, allowing for faster response times and better performance.
+
+The html pages were styled using Tailwind CSS, an open-source CSS framework, to make the frontend design stress-free. Inline CSS was also used for the transitions. 
+Using inline CSS allows for faster loading times as the CSS is loaded at the same time as the HTML page, as opposed to fetching and loading a separate CSS file.
+
+
+## Implications of Outputs
+The web application output allows for greater management of the business. All the booths can be monitored from their headquarters. In addition, apart from transitions 
+being monitored, changes in values such as revenue per kwacha or the monthly limit can be changed with the click of a button, and all other values and transactions 
+affected by this value will change automatically with accuracy and no time at all.
+
+One of the outputs being the remaining amounts will allow for the booth operators to serve Wina Fintech customers more efficiently as they will see the amount remaining 
+immediately without the time wasted by starting to check how much is left.
+
+
+## Possible Controls
+In order to ensure checks and balances for Wina Finetech, they should ensure that only selected individuals are allowed to edit transactions and/or make transactions 
+on behalf of another booth. Also, when implementing this system, they should ensure that all the devices have a good and stable connection to the internet to 
+ensure no clashing of auto-generated transaction IDs. The clashing could result in shortages when they tally totals at the end of the month.

@@ -1,0 +1,60 @@
+{% extends 'base.html' %}
+{% load humanize %}
+{% block content %}
+  {% if messages %}
+    <div class="bg-red-900 p-4 absolute top-[15%] w-[80%] ml-[10%] text-white text-center">
+      {% for message in messages %}
+        <p>{{ message }}</p>
+      {% endfor %}
+    </div>
+  {% endif %}
+  <section class="w-[90%] h-[100%] mx-auto mt-8 grid grid-cols-6 gap-3">
+    <div class="col-span-2 flex items-center justify-center">
+      <div>
+        <h6 class="text-xl font-semibold mb-2 text-gray-400">Next Transaction ID</h6>
+        <h1 class="text-3xl font-bold mb-6 w-[100%] text-center text-gray-600">{{ next_transaction_id }}</h1>
+      </div>
+    </div>
+    <div class="w-full h-full col-span-4">
+      <h1 class="text-3xl font-bold mb-6 w-[100%] text-center">Create Transaction</h1>
+      {% if messages %}
+        {% for message in messages %}
+          <div class="alert error-div {% if message.tags %}
+              alert-{{ message.tags }}
+            {% endif %}">{{ message }}</div>
+        {% endfor %}
+      {% endif %}
+        <form method="post" id="transactionForm" class="w-[80%] p-4 bg-sky-600 rounded-lg mx-auto">
+          {% csrf_token %}
+          <div class="grid grid-cols-2 w-[100%] mx-auto">
+            <div class="col-span-1 w-full flex items-center justify-center px-5">{{ form.booth }}</div>
+            <div class="col-span-1 w-full flex items-center justify-center">{{ form.service }}</div>
+            <div class="col-span-2 w-full flex items-center justify-center mt-5">{{ form.amount }}</div>
+          </div>
+          <div class="w-[50%] mx-auto flex items-center justify-center mt-5">
+            <button type="submit" class="bg-white hover:bg-sky-600 text-sky-600 hover:text-white font-bold py-2 px-4 rounded border border-white duration-500">Create Transaction</button>
+          </div>
+        </form>
+      </div>
+  </section>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+  <script>
+    $("#id_booth").change(function () {
+        var boothId = $(this).val();
+        $.ajax({
+            url: "{% url 'load_services' %}",
+            data: {
+                'booth_id': boothId
+            },
+            success: function (data) {
+                $("#id_service").html('<option value="">Select a service</option>');
+                data.forEach(function(item) {
+                    $("#id_service").append(
+                        `<option value="${item.id}">${item.name}</option>`
+                    )
+                });
+            }
+        });
+    });
+</script>
+{% endblock %}
